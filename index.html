@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Rubik:wght@400;500;700&display=swap">
 <style>
-/* Layout: snack-packet one-screen app — stats strip, thirst gauge, big tappable Vasya, shop below (side by side on wide screens). Single deliberate look. */
+/* Layout: snack-packet one-column app — header with stats and thirst gauge, one view at a time, tab bar pinned to the bottom. Single deliberate look. */
 :root {
   --packet: #FFC52E;
   --packet-deep: #F2A81D;
@@ -25,9 +25,11 @@
   --skin-shade: #E7AE82;
   --display: "Russo One", "Arial Black", Impact, sans-serif;
   --body: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tabbar-h: 66px;
   color-scheme: light;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { height: 100%; }
 body {
   background-color: var(--packet);
@@ -40,69 +42,56 @@ body {
 }
 .app {
   min-height: 100%;
-  max-width: 1040px;
+  max-width: 560px;
   margin: 0 auto;
-  padding-block: 12px 20px;
+  padding-top: 12px;
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 20px);
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: grid;
-  gap: 14px;
+  gap: 12px;
+  align-content: start;
   grid-template-columns: minmax(0, 1fr);
 }
-@media (min-width: 860px) {
-  .app { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; }
-  .shop { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
-}
+.view { display: grid; gap: 12px; min-width: 0; }
 
-/* ---------- left column ---------- */
-.play { display: grid; gap: 12px; min-width: 0; }
-.brand {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-}
+/* ---------- header ---------- */
+.brand { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .logo {
   font-family: var(--display);
-  font-size: clamp(26px, 6vw, 36px);
-  line-height: 1;
-  margin: 0;
+  font-size: clamp(24px, 6vw, 32px);
+  line-height: 1; margin: 0;
   color: var(--red);
   text-shadow: 3px 3px 0 var(--ink);
-  letter-spacing: 0.01em;
   transform: rotate(-2deg);
 }
 .logo small { display: block; font-size: 0.42em; color: var(--ink); text-shadow: none; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4px; }
-.tools { display: flex; gap: 6px; }
 .chip {
   font: 500 13px/1 var(--body);
   background: var(--paper); color: var(--ink);
   border: 2px solid var(--ink); border-radius: 999px;
   padding: 7px 11px; cursor: pointer;
 }
-.chip:focus-visible, .buy:focus-visible, .vasya:focus-visible { outline: 3px solid var(--water); outline-offset: 3px; }
+.chip.warn { background: var(--red); color: #fff; }
+.chip:focus-visible, .buy:focus-visible, .vasya:focus-visible, .tab:focus-visible { outline: 3px solid var(--water); outline-offset: 3px; }
 
 .stats {
-  display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 0;
+  display: grid; grid-template-columns: 1.4fr 1fr 1fr;
   background: var(--ink); color: var(--paper);
   border-radius: 14px; overflow: hidden;
 }
-.stat { padding: 10px 12px; display: grid; gap: 2px; min-width: 0; }
+.stat { padding: 9px 12px; display: grid; gap: 2px; min-width: 0; }
 .stat + .stat { border-left: 1px solid rgba(255,246,220,0.18); }
 .stat .lab { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
-.stat .val { font-family: var(--display); font-size: 20px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.stat.main .val { font-size: 26px; color: var(--packet); }
+.stat .val { font-family: var(--display); font-size: 19px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat.main .val { font-size: 24px; color: var(--packet); }
 
-.gauge { display: grid; gap: 6px; }
+.gauge { display: grid; gap: 5px; }
 .gauge-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.gauge-head b { font-family: var(--display); font-weight: 400; font-size: 17px; letter-spacing: 0.02em; }
-.gauge-head span { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-.bar {
-  height: 22px; border: 3px solid var(--ink); border-radius: 999px;
-  background: var(--paper); overflow: hidden; position: relative;
-}
-.bar i {
-  position: absolute; inset: 0 auto 0 0; width: 0%;
-  background: var(--water);
-  transition: width 0.12s linear, background-color 0.3s;
-}
+.gauge-head b { font-family: var(--display); font-weight: 400; font-size: 16px; letter-spacing: 0.02em; }
+.gauge-head span { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; text-align: right; }
+.bar { height: 20px; border: 3px solid var(--ink); border-radius: 999px; background: var(--paper); overflow: hidden; position: relative; }
+.bar i { position: absolute; inset: 0 auto 0 0; width: 0%; background: var(--water); transition: background-color 0.3s; }
 .bar::after {
   content: ""; position: absolute; inset: 0;
   background: repeating-linear-gradient(90deg, transparent 0 calc(25% - 2px), rgba(29,26,58,0.25) calc(25% - 2px) 25%);
@@ -110,24 +99,26 @@ body {
 }
 .gauge.hot .bar { animation: shake 0.3s infinite; }
 
+/* ---------- stage ---------- */
+.card {
+  background: var(--paper);
+  border: 3px solid var(--ink); border-radius: 22px;
+  box-shadow: 6px 6px 0 var(--ink);
+}
 .stage {
   position: relative;
-  background: var(--paper);
-  border: 3px solid var(--ink);
-  border-radius: 22px;
-  box-shadow: 6px 6px 0 var(--ink);
-  padding: 16px 12px 14px;
+  padding: 14px 12px 12px;
   display: grid; justify-items: center; gap: 6px;
   overflow: hidden;
   user-select: none; -webkit-user-select: none;
 }
 .bubble {
-  position: relative;
-  background: #fff; color: var(--ink);
+  position: relative; background: #fff; color: var(--ink);
   border: 2px solid var(--ink); border-radius: 14px;
   padding: 7px 14px; font-weight: 500; font-size: 15px;
   min-height: 36px; text-align: center; max-width: 100%;
 }
+.bubble b { color: var(--red); }
 .bubble::after {
   content: ""; position: absolute; left: 50%; bottom: -9px; width: 14px; height: 14px;
   background: #fff; border-right: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
@@ -135,12 +126,16 @@ body {
 }
 .vasya {
   appearance: none; border: 0; background: none; padding: 0; margin: 0;
-  width: min(300px, 78vw); max-width: 100%; aspect-ratio: 200 / 210;
-  cursor: pointer; touch-action: manipulation;
-  transition: transform 0.06s;
+  width: min(260px, 66vw); max-width: 100%; aspect-ratio: 200 / 210;
+  cursor: pointer; touch-action: manipulation; transition: transform 0.06s;
 }
 .vasya:active { transform: scale(0.96); }
 .vasya svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.crew { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.crew .mate { position: relative; width: 38px; height: 38px; border-radius: 50%; background: #fff; border: 2px solid var(--ink); display: grid; place-items: center; }
+.crew .mate svg { width: 32px; height: 32px; }
+.crew .mate span { position: absolute; right: -5px; bottom: -4px; background: var(--ink); color: var(--paper); font: 400 10px/1 var(--display); padding: 2px 4px; border-radius: 6px; }
+.crew.bounce .mate { animation: bob 0.35s ease-out; }
 .hint { font-size: 13px; color: var(--ink-soft); text-align: center; }
 .boost-tag {
   position: absolute; top: 12px; right: 12px;
@@ -148,7 +143,6 @@ body {
   padding: 6px 9px; border-radius: 8px; transform: rotate(4deg);
 }
 
-/* Vasya states */
 #mouthOpen, #xeyes, #tongue, #sweat { display: none; }
 .chew #mouthOpen { display: inline; }
 .chew #mouthClosed { display: none; }
@@ -161,7 +155,6 @@ body {
 .dead #tongue { display: inline; }
 .dead .vasya { cursor: not-allowed; filter: saturate(0.6); }
 #cheeks { transition: opacity 0.3s; }
-#lips { transition: fill 0.3s; }
 
 .float {
   position: absolute; pointer-events: none;
@@ -170,41 +163,52 @@ body {
   font-size: 22px; white-space: nowrap;
   animation: rise 0.8s ease-out forwards;
 }
+.float.crit { font-size: 30px; color: #B04BD8; }
 .float small { display: block; font-size: 0.6em; color: var(--ink); text-shadow: none; text-align: center; }
 .crumb {
   position: absolute; width: 8px; height: 8px; border-radius: 2px;
-  background: var(--crust); border: 1px solid #8a5418;
-  pointer-events: none;
+  background: var(--crust); border: 1px solid #8a5418; pointer-events: none;
   animation: crumb 0.7s cubic-bezier(.2,.6,.4,1) forwards;
 }
 @keyframes rise { from { transform: translate(-50%, 0) scale(0.8); opacity: 1; } to { transform: translate(-50%, -70px) scale(1.15); opacity: 0; } }
 @keyframes crumb { to { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
 @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+@keyframes bob { 40% { transform: translateY(-5px); } }
 
-/* ---------- shop ---------- */
-.shop {
-  background: var(--paper);
-  border: 3px solid var(--ink); border-radius: 22px;
-  box-shadow: 6px 6px 0 var(--ink);
-  padding: 14px; display: grid; gap: 14px; min-width: 0;
+/* ---------- quick drinks on the Vasya tab ---------- */
+.drinks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.drink-card {
+  background: #fff; border: 2px solid var(--ink); border-radius: 14px;
+  padding: 8px 6px; display: grid; justify-items: center; gap: 4px; text-align: center; min-width: 0;
 }
-.shop h2 {
+.drink-card .ico svg { width: 30px; height: 30px; }
+.drink-card .ico { width: 34px; height: 34px; }
+.drink-card b { font-size: 12.5px; line-height: 1.2; }
+.drink-card small { font-size: 11px; color: var(--ink-soft); line-height: 1.2; }
+.drink-card .buy { width: 100%; min-width: 0; }
+
+/* ---------- lists ---------- */
+.panel { padding: 14px; display: grid; gap: 12px; }
+.panel h2 {
   margin: 0; font-family: var(--display); font-weight: 400; font-size: 19px;
-  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap;
 }
-.shop h2 span { font-family: var(--body); font-size: 12px; color: var(--ink-soft); letter-spacing: 0.06em; text-transform: uppercase; }
+.panel h2 span { font-family: var(--body); font-size: 12px; color: var(--ink-soft); letter-spacing: 0.06em; text-transform: uppercase; }
+.panel p.lead { margin: 0; font-size: 13.5px; color: var(--ink-soft); line-height: 1.45; }
 .list { display: grid; gap: 8px; }
 .item {
-  display: grid; grid-template-columns: 40px minmax(0,1fr) auto; gap: 10px; align-items: center;
+  display: grid; grid-template-columns: 44px minmax(0,1fr) auto; gap: 10px; align-items: center;
   padding: 8px 8px 8px 6px; border-radius: 12px;
   background: #fff; border: 2px solid rgba(29,26,58,0.12);
 }
-.ico { width: 40px; height: 40px; display: grid; place-items: center; }
+.item.nefor .ico { border-radius: 50%; background: var(--paper); border: 2px solid var(--ink); }
+.ico { width: 44px; height: 44px; display: grid; place-items: center; }
 .ico svg { width: 36px; height: 36px; }
 .info { min-width: 0; display: grid; gap: 2px; }
 .info b { font-weight: 700; font-size: 14.5px; }
 .info b em { font-style: normal; font-weight: 500; color: var(--ink-soft); font-size: 12px; margin-left: 4px; }
 .info span { font-size: 12.5px; color: var(--ink-soft); line-height: 1.3; }
+.info i { font-size: 12px; color: var(--ink); font-style: italic; opacity: 0.75; }
 .buy {
   font: 400 14px/1 var(--display);
   background: var(--red); color: #fff;
@@ -214,116 +218,179 @@ body {
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .buy.drink { background: var(--water); }
+.buy.hire { background: #6B3FA0; }
 .buy:active:not(:disabled) { transform: translate(2px,2px); box-shadow: none; }
 .buy:disabled { background: #d9d2bf; color: #7d7768; box-shadow: none; cursor: not-allowed; border-color: #a9a291; }
-.foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-soft); }
-.foot .chip { font-size: 12px; padding: 6px 10px; }
-.foot .chip.warn { background: var(--red); color: #fff; }
+
+.kv { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px 12px; margin: 0; }
+.kv dt { color: var(--ink-soft); }
+.kv dd { margin: 0; font-family: var(--display); font-variant-numeric: tabular-nums; text-align: right; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- bottom tab bar ---------- */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: var(--ink);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: max(8px, env(safe-area-inset-left, 0px));
+  padding-right: max(8px, env(safe-area-inset-right, 0px));
+}
+.tabbar .in {
+  max-width: 560px; margin: 0 auto; height: var(--tabbar-h);
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding-block: 6px;
+}
+.tab {
+  appearance: none; border: 0; background: none; color: var(--paper);
+  display: grid; justify-items: center; align-content: center; gap: 3px;
+  border-radius: 14px; cursor: pointer; position: relative;
+  font: 500 12px/1 var(--body); padding: 4px 2px;
+}
+.tab svg { width: 24px; height: 24px; }
+.tab[aria-selected="true"] { background: var(--packet); color: var(--ink); }
+.tab .dot {
+  position: absolute; top: 5px; left: calc(50% + 8px);
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--red); border: 2px solid var(--ink);
+}
 
 @media (max-width: 420px) {
-  .stat .val { font-size: 17px; }
-  .stat.main .val { font-size: 21px; }
-  .stat { padding: 9px 9px; }
+  .stat .val { font-size: 16px; }
+  .stat.main .val { font-size: 20px; }
+  .stat { padding: 8px 9px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .float, .crumb { animation-duration: 0.01s; }
-  .gauge.hot .bar { animation: none; }
+  .gauge.hot .bar, .crew.bounce .mate { animation: none; }
   .vasya { transition: none; }
 }
 </style>
 
 <div class="app">
-  <section class="play">
+  <header class="view">
     <div class="brand">
       <h1 class="logo">Вась, хрумни!<small>тапалка про хрумку и сушняк</small></h1>
-      <div class="tools">
-        <button class="chip" id="soundBtn" type="button">Звук: вкл</button>
-      </div>
+      <button class="chip" id="soundBtn" type="button">Звук: вкл</button>
     </div>
-
     <div class="stats">
       <div class="stat main"><span class="lab">Хрумки</span><span class="val" id="hrum">0</span></div>
       <div class="stat"><span class="lab">За тап</span><span class="val" id="perTap">1</span></div>
       <div class="stat"><span class="lab">В секунду</span><span class="val" id="perSec">0</span></div>
     </div>
-
     <div class="gauge" id="gauge">
       <div class="gauge-head"><b>Сушняк</b><span id="sushTxt">0% · во рту свежо</span></div>
       <div class="bar"><i id="sushBar"></i></div>
     </div>
+  </header>
 
-    <div class="stage" id="stage">
-      <div class="bubble" id="bubble">Вась, хрумни разок!</div>
-      <button class="vasya" id="vasya" type="button" aria-label="Тапнуть Васю: он хрумкает">
-        <svg viewBox="0 0 200 210" aria-hidden="true">
-          <!-- ears -->
-          <ellipse cx="26" cy="118" rx="14" ry="20" fill="var(--skin-shade)" stroke="var(--ink)" stroke-width="4"/>
-          <ellipse cx="174" cy="118" rx="14" ry="20" fill="var(--skin-shade)" stroke="var(--ink)" stroke-width="4"/>
-          <!-- head -->
-          <path d="M100 30 C150 30 176 66 176 118 C176 168 144 200 100 200 C56 200 24 168 24 118 C24 66 50 30 100 30 Z" fill="var(--skin)" stroke="var(--ink)" stroke-width="4"/>
-          <!-- cap -->
-          <path d="M30 86 C30 40 64 18 100 18 C140 18 170 40 170 86 Z" fill="var(--ink)"/>
-          <path d="M100 86 L196 86 C196 98 180 102 160 100 L100 98 Z" fill="var(--ink)"/>
-          <rect x="30" y="80" width="140" height="10" rx="3" fill="var(--red)"/>
-          <circle cx="100" cy="22" r="6" fill="var(--red)"/>
-          <text x="100" y="66" text-anchor="middle" font-family="Russo One, Arial Black, sans-serif" font-size="22" fill="var(--packet)">ВАСЯ</text>
-          <!-- brows -->
-          <g id="brows" stroke="var(--ink)" stroke-width="5" stroke-linecap="round">
-            <path id="browL" d="M56 104 L84 100"/>
-            <path id="browR" d="M116 100 L144 104"/>
-          </g>
-          <!-- eyes -->
-          <g id="eyes">
-            <ellipse cx="70" cy="122" rx="11" ry="13" fill="#fff" stroke="var(--ink)" stroke-width="3"/>
-            <ellipse cx="130" cy="122" rx="11" ry="13" fill="#fff" stroke="var(--ink)" stroke-width="3"/>
-            <circle id="pupilL" cx="72" cy="124" r="5.5" fill="var(--ink)"/>
-            <circle id="pupilR" cx="128" cy="124" r="5.5" fill="var(--ink)"/>
-            <rect id="lidL" x="57" y="108" width="26" height="0" fill="var(--skin-shade)"/>
-            <rect id="lidR" x="117" y="108" width="26" height="0" fill="var(--skin-shade)"/>
-          </g>
-          <g id="xeyes" stroke="var(--ink)" stroke-width="5" stroke-linecap="round">
-            <path d="M60 112 L80 132 M80 112 L60 132"/>
-            <path d="M120 112 L140 132 M140 112 L120 132"/>
-          </g>
-          <!-- nose & cheeks -->
-          <path d="M100 128 C94 142 92 148 102 150" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>
-          <g id="cheeks" opacity="0.25">
-            <ellipse cx="54" cy="150" rx="14" ry="9" fill="var(--red)"/>
-            <ellipse cx="146" cy="150" rx="14" ry="9" fill="var(--red)"/>
-          </g>
-          <!-- mouth -->
-          <g id="mouthClosed">
-            <path d="M74 168 C88 180 112 180 126 168" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
-          </g>
-          <g id="mouthOpen">
-            <ellipse id="lips" cx="100" cy="172" rx="24" ry="17" fill="#B6303A" stroke="var(--ink)" stroke-width="4"/>
-            <rect x="86" y="157" width="28" height="7" rx="2" fill="#fff"/>
-          </g>
-          <path id="tongue" d="M90 178 C90 196 110 196 110 178 Z" fill="#E86F7A" stroke="var(--ink)" stroke-width="3"/>
-          <!-- sweat -->
-          <path id="sweat" d="M160 96 C154 108 152 114 160 116 C168 114 166 108 160 96 Z" fill="var(--water)" stroke="var(--ink)" stroke-width="2.5"/>
-        </svg>
-      </button>
-      <div class="hint" id="hint">Тапай по Васе. Хрумка сушит, не забывай запивать.</div>
-      <div class="boost-tag" id="boostTag" hidden>×2 РАССОЛ</div>
-    </div>
-  </section>
+  <main>
+    <section class="view" id="view-vasya" role="tabpanel" aria-labelledby="tab-vasya">
+      <div class="stage card" id="stage">
+        <div class="bubble" id="bubble">Вась, хрумни разок!</div>
+        <button class="vasya" id="vasya" type="button" aria-label="Тапнуть Васю: он хрумкает">
+          <svg viewBox="0 0 200 210" aria-hidden="true">
+            <ellipse cx="26" cy="118" rx="14" ry="20" fill="var(--skin-shade)" stroke="var(--ink)" stroke-width="4"/>
+            <ellipse cx="174" cy="118" rx="14" ry="20" fill="var(--skin-shade)" stroke="var(--ink)" stroke-width="4"/>
+            <path d="M100 30 C150 30 176 66 176 118 C176 168 144 200 100 200 C56 200 24 168 24 118 C24 66 50 30 100 30 Z" fill="var(--skin)" stroke="var(--ink)" stroke-width="4"/>
+            <path d="M30 86 C30 40 64 18 100 18 C140 18 170 40 170 86 Z" fill="var(--ink)"/>
+            <path d="M100 86 L196 86 C196 98 180 102 160 100 L100 98 Z" fill="var(--ink)"/>
+            <rect x="30" y="80" width="140" height="10" rx="3" fill="var(--red)"/>
+            <circle cx="100" cy="22" r="6" fill="var(--red)"/>
+            <text x="100" y="66" text-anchor="middle" font-family="Russo One, Arial Black, sans-serif" font-size="22" fill="var(--packet)">ВАСЯ</text>
+            <g stroke="var(--ink)" stroke-width="5" stroke-linecap="round">
+              <path id="browL" d="M56 104 L84 100"/>
+              <path id="browR" d="M116 100 L144 104"/>
+            </g>
+            <g id="eyes">
+              <ellipse cx="70" cy="122" rx="11" ry="13" fill="#fff" stroke="var(--ink)" stroke-width="3"/>
+              <ellipse cx="130" cy="122" rx="11" ry="13" fill="#fff" stroke="var(--ink)" stroke-width="3"/>
+              <circle cx="72" cy="124" r="5.5" fill="var(--ink)"/>
+              <circle cx="128" cy="124" r="5.5" fill="var(--ink)"/>
+              <rect id="lidL" x="57" y="108" width="26" height="0" fill="var(--skin-shade)"/>
+              <rect id="lidR" x="117" y="108" width="26" height="0" fill="var(--skin-shade)"/>
+            </g>
+            <g id="xeyes" stroke="var(--ink)" stroke-width="5" stroke-linecap="round">
+              <path d="M60 112 L80 132 M80 112 L60 132"/>
+              <path d="M120 112 L140 132 M140 112 L120 132"/>
+            </g>
+            <path d="M100 128 C94 142 92 148 102 150" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>
+            <g id="cheeks" opacity="0.25">
+              <ellipse cx="54" cy="150" rx="14" ry="9" fill="var(--red)"/>
+              <ellipse cx="146" cy="150" rx="14" ry="9" fill="var(--red)"/>
+            </g>
+            <g id="mouthClosed">
+              <path d="M74 168 C88 180 112 180 126 168" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+            </g>
+            <g id="mouthOpen">
+              <ellipse id="lips" cx="100" cy="172" rx="24" ry="17" fill="#B6303A" stroke="var(--ink)" stroke-width="4"/>
+              <rect x="86" y="157" width="28" height="7" rx="2" fill="#fff"/>
+            </g>
+            <path id="tongue" d="M90 178 C90 196 110 196 110 178 Z" fill="#E86F7A" stroke="var(--ink)" stroke-width="3"/>
+            <path id="sweat" d="M160 96 C154 108 152 114 160 116 C168 114 166 108 160 96 Z" fill="var(--water)" stroke="var(--ink)" stroke-width="2.5"/>
+          </svg>
+        </button>
+        <div class="crew" id="crew" aria-label="Тусовка Васи"></div>
+        <div class="hint" id="hint">Тапай по Васе. Хрумка сушит, не забывай запивать.</div>
+        <div class="boost-tag" id="boostTag" hidden>×2 РАССОЛ</div>
+      </div>
+      <div class="drinks" id="drinks"></div>
+    </section>
 
-  <aside class="shop" aria-label="Магазин">
-    <h2>Попить <span>сбивает сушняк</span></h2>
-    <div class="list" id="drinks"></div>
-    <h2>Прокачка <span>больше хрумки</span></h2>
-    <div class="list" id="ups"></div>
-    <div class="foot">
-      <span id="totals">Всего схрумкано: 0 · тапов: 0</span>
-      <button class="chip" id="resetBtn" type="button">Начать заново</button>
-    </div>
-  </aside>
+    <section class="view" id="view-ups" role="tabpanel" aria-labelledby="tab-ups" hidden>
+      <div class="panel card">
+        <h2>Прокачка <span>больше хрумки</span></h2>
+        <div class="list" id="ups"></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-nefor" role="tabpanel" aria-labelledby="tab-nefor" hidden>
+      <div class="panel card">
+        <h2>Нефоры <span>тусовка у подъезда</span></h2>
+        <p class="lead">Позови неформалов к Васе. У каждого своя фишка, с уровнем она сильнее. Позванные тусят рядом с Васей и комментируют процесс.</p>
+        <div class="list" id="nefors"></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-more" role="tabpanel" aria-labelledby="tab-more" hidden>
+      <div class="panel card">
+        <h2>Статистика</h2>
+        <dl class="kv" id="statList"></dl>
+      </div>
+      <div class="panel card">
+        <h2>Настройки</h2>
+        <div class="row">
+          <button class="chip" id="soundBtn2" type="button">Звук: вкл</button>
+          <button class="chip" id="resetBtn" type="button">Начать заново</button>
+        </div>
+      </div>
+    </section>
+  </main>
 </div>
+
+<nav class="tabbar" aria-label="Разделы">
+  <div class="in" role="tablist">
+    <button class="tab" id="tab-vasya" role="tab" type="button" data-view="vasya" aria-selected="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M4.5 10c0-5 15-5 15 0z" fill="currentColor"/><path d="M9 16c1.6 1.4 4.4 1.4 6 0"/></svg>
+      Вася
+    </button>
+    <button class="tab" id="tab-ups" role="tab" type="button" data-view="ups" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V5M5 12l7-7 7 7"/></svg>
+      Прокачка<span class="dot" hidden></span>
+    </button>
+    <button class="tab" id="tab-nefor" role="tab" type="button" data-view="nefor" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="15" r="6"/><path d="M8 10l1-7 2 5 1-6 1 6 2-5 1 7" fill="currentColor"/></svg>
+      Нефоры<span class="dot" hidden></span>
+    </button>
+    <button class="tab" id="tab-more" role="tab" type="button" data-view="more" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20V12M12 20V5M19 20v-5"/></svg>
+      Ещё
+    </button>
+  </div>
+</nav>
 
 <script>
 (function () {
   const SAVE_KEY = 'vasya-hrumka-v1';
+  const TAB_KEY = 'vasya-hrumka-tab';
 
   const ICONS = {
     water: '<svg viewBox="0 0 40 40"><path d="M10 6h20l-3 30H13z" fill="#CFEFFF" stroke="#1D1A3A" stroke-width="2.5" stroke-linejoin="round"/><path d="M11.6 16h16.8l-2 18H13.6z" fill="#2FA4D9"/></svg>',
@@ -333,13 +400,18 @@ body {
     garlic: '<svg viewBox="0 0 40 40"><rect x="7" y="12" width="12" height="12" rx="2" fill="#C9822B" stroke="#1D1A3A" stroke-width="2.5" transform="rotate(-12 13 18)"/><rect x="19" y="18" width="13" height="13" rx="2" fill="#D9963C" stroke="#1D1A3A" stroke-width="2.5" transform="rotate(10 25 24)"/><path d="M27 4c-4 3-5 7-2 10 3-3 3-7 2-10z" fill="#fff" stroke="#1D1A3A" stroke-width="2"/></svg>',
     babushka: '<svg viewBox="0 0 40 40"><circle cx="20" cy="18" r="10" fill="#F6C9A0" stroke="#1D1A3A" stroke-width="2.5"/><path d="M8 18c0-10 24-10 24 0l-2 4c-2-6-18-6-20 0z" fill="#E5383B" stroke="#1D1A3A" stroke-width="2.5"/><path d="M17 32h6l2 6H15z" fill="#E5383B"/><circle cx="16.5" cy="19" r="1.6" fill="#1D1A3A"/><circle cx="23.5" cy="19" r="1.6" fill="#1D1A3A"/><path d="M16 24c2 2 6 2 8 0" fill="none" stroke="#1D1A3A" stroke-width="2" stroke-linecap="round"/></svg>',
     petya: '<svg viewBox="0 0 40 40"><circle cx="20" cy="21" r="12" fill="#F6C9A0" stroke="#1D1A3A" stroke-width="2.5"/><path d="M8 18c2-10 22-12 24 0-6-4-18-4-24 0z" fill="#6B3E1F" stroke="#1D1A3A" stroke-width="2.5"/><rect x="11" y="18" width="8" height="5" rx="1.5" fill="#1D1A3A"/><rect x="21" y="18" width="8" height="5" rx="1.5" fill="#1D1A3A"/><path d="M19 20.5h2" stroke="#1D1A3A" stroke-width="2"/><path d="M15 27c3 3 7 3 10 0" fill="none" stroke="#1D1A3A" stroke-width="2.2" stroke-linecap="round"/></svg>',
-    cooler: '<svg viewBox="0 0 40 40"><path d="M14 4h12v10H14z" fill="#9AD8F5" stroke="#1D1A3A" stroke-width="2.5"/><rect x="10" y="14" width="20" height="23" rx="3" fill="#FFF6DC" stroke="#1D1A3A" stroke-width="2.5"/><rect x="15" y="20" width="4" height="4" fill="#2FA4D9"/><rect x="21" y="20" width="4" height="4" fill="#E5383B"/></svg>'
+    cooler: '<svg viewBox="0 0 40 40"><path d="M14 4h12v10H14z" fill="#9AD8F5" stroke="#1D1A3A" stroke-width="2.5"/><rect x="10" y="14" width="20" height="23" rx="3" fill="#FFF6DC" stroke="#1D1A3A" stroke-width="2.5"/><rect x="15" y="20" width="4" height="4" fill="#2FA4D9"/><rect x="21" y="20" width="4" height="4" fill="#E5383B"/></svg>',
+    punk: '<svg viewBox="0 0 40 40"><path d="M14 13 L16 2 L18 11 L20 0 L22 11 L24 2 L26 13 Z" fill="#E5383B" stroke="#1D1A3A" stroke-width="1.8" stroke-linejoin="round"/><circle cx="20" cy="23" r="11" fill="#F6C9A0" stroke="#1D1A3A" stroke-width="2.5"/><circle cx="16" cy="22" r="1.8" fill="#1D1A3A"/><circle cx="24" cy="22" r="1.8" fill="#1D1A3A"/><path d="M15 28c3 2 7 2 10 0" fill="none" stroke="#1D1A3A" stroke-width="2" stroke-linecap="round"/><circle cx="9.5" cy="25" r="1.6" fill="none" stroke="#8A8FA0" stroke-width="1.4"/><circle cx="20" cy="31.5" r="1.4" fill="none" stroke="#8A8FA0" stroke-width="1.3"/></svg>',
+    emo: '<svg viewBox="0 0 40 40"><circle cx="20" cy="22" r="11" fill="#F6C9A0" stroke="#1D1A3A" stroke-width="2.5"/><path d="M8 22 C7 9 30 6 33 16 C26 13 22 14 16 27 C14 22 11 20 8 22 Z" fill="#141226"/><path d="M19 12 C17 17 16 21 15 25" stroke="#F06AA8" stroke-width="2.6" stroke-linecap="round"/><circle cx="25" cy="22" r="1.8" fill="#1D1A3A"/><path d="M25.5 25 q0 3 -1 4" stroke="#2FA4D9" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M18 30c2-1.4 4-1.4 6 0" fill="none" stroke="#1D1A3A" stroke-width="2" stroke-linecap="round"/></svg>',
+    hippie: '<svg viewBox="0 0 40 40"><path d="M7 34 C5 16 10 8 20 8 C30 8 35 16 33 34 Z" fill="#C98B3A"/><circle cx="20" cy="22" r="10" fill="#F6C9A0" stroke="#1D1A3A" stroke-width="2.4"/><path d="M9 15 C15 12 25 12 31 15" stroke="#6BC76B" stroke-width="3.2" fill="none"/><circle cx="12" cy="14" r="3.2" fill="#FFF6DC" stroke="#1D1A3A" stroke-width="1.4"/><circle cx="12" cy="14" r="1.3" fill="#FFC52E"/><circle cx="15.5" cy="21" r="3" fill="none" stroke="#1D1A3A" stroke-width="1.6"/><circle cx="24.5" cy="21" r="3" fill="none" stroke="#1D1A3A" stroke-width="1.6"/><path d="M18.5 21h3" stroke="#1D1A3A" stroke-width="1.4"/><path d="M16 27c2.5 2 5.5 2 8 0" fill="none" stroke="#1D1A3A" stroke-width="2" stroke-linecap="round"/></svg>',
+    goth: '<svg viewBox="0 0 40 40"><path d="M7 36 C6 16 10 7 20 7 C30 7 34 16 33 36 Z" fill="#141226"/><ellipse cx="20" cy="21" rx="9.5" ry="11" fill="#F1EEF5" stroke="#1D1A3A" stroke-width="2.2"/><path d="M11 15c4-5 14-5 18 0-5-2-13-2-18 0z" fill="#141226"/><path d="M14 20l4 1M22 21l4-1" stroke="#1D1A3A" stroke-width="2.2" stroke-linecap="round"/><path d="M17 27.5c2 1 4 1 6 0" stroke="#4A1530" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M20 33v4M18 35h4" stroke="#C9C3D6" stroke-width="1.6"/></svg>',
+    metal: '<svg viewBox="0 0 40 40"><path d="M6 36 C4 14 10 6 20 6 C30 6 36 14 34 36 L28 36 L28 18 L12 18 L12 36 Z" fill="#5A3416"/><circle cx="20" cy="20" r="9" fill="#F6C9A0" stroke="#1D1A3A" stroke-width="2.2"/><path d="M11 22 C11 34 29 34 29 22 C26 26 14 26 11 22 Z" fill="#5A3416" stroke="#1D1A3A" stroke-width="1.6"/><circle cx="16.5" cy="18.5" r="1.6" fill="#1D1A3A"/><circle cx="23.5" cy="18.5" r="1.6" fill="#1D1A3A"/><path d="M15 15l3 1M25 15l-3 1" stroke="#1D1A3A" stroke-width="1.8" stroke-linecap="round"/></svg>'
   };
 
   const DRINKS = [
-    { id: 'water',  name: 'Стакан воды',      desc: 'Минус 30% сушняка',                         base: 10,  scale: 3,  amt: 30 },
-    { id: 'kvas',   name: 'Кружка кваса',     desc: 'Минус 65% сушняка',                         base: 45,  scale: 8,  amt: 65 },
-    { id: 'rassol', name: 'Огуречный рассол', desc: 'Сушняк в ноль и ×2 хрумки на 15 секунд',   base: 220, scale: 25, amt: 100, boost: 15 }
+    { id: 'water',  name: 'Вода',   desc: '−30% сушняка',    base: 10,  scale: 3,  amt: 30,  full: 'Стакан воды' },
+    { id: 'kvas',   name: 'Квас',   desc: '−65% сушняка',    base: 45,  scale: 8,  amt: 65,  full: 'Кружка кваса' },
+    { id: 'rassol', name: 'Рассол', desc: '−100% и ×2 хрумки', base: 220, scale: 25, amt: 100, boost: 15, full: 'Огуречный рассол' }
   ];
   const UPS = [
     { id: 'pack',     name: 'Пачка побольше',      desc: '+1 хрумка за тап',                 base: 15,  k: 1.45 },
@@ -348,31 +420,46 @@ body {
     { id: 'cooler',   name: 'Кулер на кухне',      desc: 'Сушняк проходит быстрее',          base: 250, k: 1.9 },
     { id: 'petya',    name: 'Кореш Петя',          desc: '+8 хрумок в секунду, делится',     base: 650, k: 1.6 }
   ];
+  const NEFORS = [
+    { id: 'punk',   name: 'Панк Шнурок',      desc: '+3 хрумки в секунду за уровень',          quote: 'Хрумает и орёт «Хой!»',                 base: 120,  k: 1.55, max: 50,
+      lines: ['Хой! Хрумаем!', 'Панки хрумку не сдают!', 'Анархия и сухарики!'] },
+    { id: 'emo',    name: 'Эмо Кирюша',       desc: '+4% шанс крит-хрума ×5 за уровень',       quote: 'Плачет от счастья на каждом хруме',     base: 300,  k: 1.7,  max: 10,
+      lines: ['Мне так грустно… дай хрумку', 'Хрумаю и плачу', 'Никто не понимает мою хрумку'] },
+    { id: 'hippie', name: 'Хиппи Ромашка',    desc: 'Напитки дешевле на 8% за уровень',        quote: 'Делится водичкой со всеми',             base: 200,  k: 1.7,  max: 6,
+      lines: ['Мир, дружба, хрумка', 'Делись водичкой, брат', 'Всё будет хрумко'] },
+    { id: 'goth',   name: 'Гот Мрак',         desc: 'Сушняк от хрума меньше на 8% за уровень', quote: 'Пьёт томатный сок, сушняку не сдаётся', base: 400,  k: 1.8,  max: 7,
+      lines: ['Тьма… и квас', 'Хрумка хрустит, как кости бытия', 'Пей томатный, Вася'] },
+    { id: 'metal',  name: 'Металлист Борода', desc: '+25 хрумок в секунду за уровень',         quote: 'Хрумает в ритме бласт-бита',            base: 2500, k: 1.6,  max: 50,
+      lines: ['Хрууум! \\m/', 'Это бласт-бит хрумки!', 'Сушняк для слабаков!'] }
+  ];
 
   const PHRASES = {
     fresh: ['Хрум-хрум!', 'Ещё пачечку!', 'Хрустит как надо', 'Вкуснотища', 'Хрум. Хрум. Хрум.', 'С сыром были бы лучше'],
     mid:   ['Чё-то пить охота…', 'Солоноватые…', 'Кхм. Нормально.', 'Язык как наждачка'],
     dry:   ['Воды бы…', 'Во рту Сахара', 'Сушня-а-ак…', 'Дайте кваса, люди!'],
     dead:  ['Всё. Засох.', 'Кхе… кхе…', 'Не могу хрумать…'],
-    drink: ['Ух, хорошо пошло!', 'Ожил!', 'Вот это жизнь', 'Можно снова хрумать']
+    drink: ['Ух, хорошо пошло!', 'Ожил!', 'Вот это жизнь', 'Можно снова хрумать'],
+    crit:  ['ВОТ ЭТО ХРУМ!', 'Аж зубы звенят!', 'Легендарный хрум!']
   };
 
-  const fresh = () => ({ hrum: 0, total: 0, taps: 0, sush: 0, lv: { pack: 0, babushka: 0, garlic: 0, cooler: 0, petya: 0 }, boostLeft: 0, stunLeft: 0, sound: true });
+  const fresh = () => ({
+    hrum: 0, total: 0, taps: 0, crits: 0, drinks: 0, stuns: 0, sush: 0,
+    lv: { pack: 0, babushka: 0, garlic: 0, cooler: 0, petya: 0, punk: 0, emo: 0, hippie: 0, goth: 0, metal: 0 },
+    boostLeft: 0, stunLeft: 0, sound: true
+  });
   let s = fresh();
 
   // ---------- derived numbers ----------
-  const perTap   = () => 1 + s.lv.pack + s.lv.garlic * 5;
-  const perSec   = () => s.lv.babushka * 1 + s.lv.petya * 8;
-  const sushTap  = () => 2.2 + Math.min(s.lv.garlic, 12) * 0.45;
-  const sushDrop = () => 1.3 + s.lv.cooler * 0.9;
-  const boostMul = () => (s.boostLeft > 0 ? 2 : 1);
-  const dryMul   = () => (s.sush < 50 ? 1 : s.sush < 80 ? 0.7 : 0.4);
-  const upCost   = u => Math.round(u.base * Math.pow(u.k, s.lv[u.id]));
-  const drinkCost = d => Math.round(d.base + (perTap() - 1) * d.scale + perSec() * d.scale * 0.5);
+  const perTap    = () => 1 + s.lv.pack + s.lv.garlic * 5;
+  const perSec    = () => s.lv.babushka + s.lv.petya * 8 + s.lv.punk * 3 + s.lv.metal * 25;
+  const sushTap   = () => (2.2 + Math.min(s.lv.garlic, 12) * 0.45) * (1 - Math.min(s.lv.goth, 7) * 0.08);
+  const sushDrop  = () => 1.3 + s.lv.cooler * 0.9;
+  const critCh    = () => Math.min(s.lv.emo, 10) * 0.04;
+  const boostMul  = () => (s.boostLeft > 0 ? 2 : 1);
+  const dryMul    = () => (s.sush < 50 ? 1 : s.sush < 80 ? 0.7 : 0.4);
+  const lvCost    = u => Math.round(u.base * Math.pow(u.k, s.lv[u.id]));
+  const drinkCost = d => Math.round((d.base + (perTap() - 1) * d.scale + perSec() * d.scale * 0.5) * (1 - Math.min(s.lv.hippie, 6) * 0.08));
 
-  function fmtRate(n) {
-    return n < 10 && n % 1 ? n.toFixed(1).replace('.', ',') : fmt(n);
-  }
   function fmt(n) {
     n = Math.floor(n);
     if (n < 10000) return n.toLocaleString('ru-RU');
@@ -380,29 +467,61 @@ body {
     for (const [v, u] of units) if (n >= v) return (n / v).toFixed(n / v < 100 ? 1 : 0).replace('.', ',') + u;
     return String(n);
   }
+  const fmtRate = n => (n < 10 && n % 1 ? n.toFixed(1).replace('.', ',') : fmt(n));
 
   // ---------- DOM ----------
   const $ = id => document.getElementById(id);
   const stage = $('stage'), vasya = $('vasya'), bubble = $('bubble');
-  const svg = vasya.querySelector('svg');
 
   function buildList(el, items, kind) {
     el.innerHTML = '';
     items.forEach(it => {
       const row = document.createElement('div');
-      row.className = 'item';
+      row.className = 'item' + (kind === 'nefor' ? ' nefor' : '');
       row.innerHTML =
         '<div class="ico">' + ICONS[it.id] + '</div>' +
-        '<div class="info"><b>' + it.name + '<em data-lv></em></b><span>' + it.desc + '</span></div>' +
-        '<button class="buy' + (kind === 'drink' ? ' drink' : '') + '" type="button" id="buy-' + it.id + '"></button>';
+        '<div class="info"><b>' + it.name + '<em data-lv></em></b><span>' + it.desc + '</span>' +
+        (it.quote ? '<i>' + it.quote + '</i>' : '') + '</div>' +
+        '<button class="buy' + (kind === 'nefor' ? ' hire' : '') + '" type="button" id="buy-' + it.id + '"></button>';
       const btn = row.querySelector('button');
-      btn.addEventListener('click', () => (kind === 'drink' ? drink(it) : upgrade(it)));
+      btn.addEventListener('click', () => levelUp(it, kind));
       it._btn = btn; it._lv = row.querySelector('[data-lv]');
       el.appendChild(row);
     });
   }
-  buildList($('drinks'), DRINKS, 'drink');
   buildList($('ups'), UPS, 'up');
+  buildList($('nefors'), NEFORS, 'nefor');
+
+  DRINKS.forEach(d => {
+    const c = document.createElement('div');
+    c.className = 'drink-card';
+    c.innerHTML = '<div class="ico">' + ICONS[d.id] + '</div><b>' + d.name + '</b><small>' + d.desc + '</small>' +
+      '<button class="buy drink" type="button" id="buy-' + d.id + '"></button>';
+    d._btn = c.querySelector('button');
+    d._btn.addEventListener('click', () => drink(d));
+    $('drinks').appendChild(c);
+  });
+
+  // ---------- tabs ----------
+  const tabs = Array.from(document.querySelectorAll('.tab'));
+  function showTab(name) {
+    tabs.forEach(t => {
+      const on = t.dataset.view === name;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      $('view-' + t.dataset.view).hidden = !on;
+    });
+    try { localStorage.setItem(TAB_KEY, name); } catch (e) {}
+    render(true);
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => { showTab(t.dataset.view); window.scrollTo(0, 0); });
+    t.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      n.focus(); showTab(n.dataset.view);
+    });
+  });
 
   // ---------- sound ----------
   let ac = null, noiseBuf = null;
@@ -419,10 +538,10 @@ body {
       return ac;
     } catch (e) { return null; }
   }
-  function crunch() {
+  function crunch(loud) {
     const a = audio(); if (!a) return;
     const t = a.currentTime;
-    for (let k = 0; k < 3; k++) {
+    for (let k = 0; k < (loud ? 6 : 3); k++) {
       const src = a.createBufferSource(); src.buffer = noiseBuf;
       const f = a.createBiquadFilter(); f.type = 'bandpass';
       f.frequency.value = 1400 + Math.random() * 2600; f.Q.value = 1.2;
@@ -456,15 +575,30 @@ body {
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.4, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
     src.connect(f); f.connect(g); g.connect(a.destination); src.start(t); src.stop(t + 0.2);
   }
+  function riff() {
+    const a = audio(); if (!a) return;
+    const t = a.currentTime;
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) curve[i] = Math.tanh((i / 128 - 1) * 6);
+    [82, 82, 98, 110].forEach((fr, k) => {
+      const o = a.createOscillator(), g = a.createGain(), sh = a.createWaveShaper();
+      sh.curve = curve;
+      const st = t + k * 0.11;
+      o.type = 'sawtooth'; o.frequency.value = fr;
+      g.gain.setValueAtTime(0.0001, st); g.gain.exponentialRampToValueAtTime(0.12, st + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, st + 0.1);
+      o.connect(sh); sh.connect(g); g.connect(a.destination); o.start(st); o.stop(st + 0.11);
+    });
+  }
 
   // ---------- effects ----------
-  function say(list) { bubble.textContent = list[Math.floor(Math.random() * list.length)]; }
+  const pick = list => list[Math.floor(Math.random() * list.length)];
+  function say(list) { bubble.textContent = pick(list); }
   function band() { return s.stunLeft > 0 ? 'dead' : s.sush >= 70 ? 'dry' : s.sush >= 35 ? 'mid' : 'fresh'; }
   let lastBand = 'fresh';
 
-  function floatText(x, y, big, small) {
+  function floatText(x, y, big, small, cls) {
     const el = document.createElement('div');
-    el.className = 'float';
+    el.className = 'float' + (cls ? ' ' + cls : '');
     el.style.left = x + 'px'; el.style.top = y + 'px';
     el.innerHTML = big + (small ? '<small>' + small + '</small>' : '');
     stage.appendChild(el);
@@ -491,6 +625,30 @@ body {
     chewT = setTimeout(() => stage.classList.remove('chew'), 110);
   }
 
+  const shortName = n => n.name.split(' ').slice(1).join(' ');
+  function renderCrew() {
+    const el = $('crew');
+    el.innerHTML = '';
+    NEFORS.forEach(n => {
+      if (!s.lv[n.id]) return;
+      const m = document.createElement('div');
+      m.className = 'mate'; m.title = n.name;
+      m.innerHTML = ICONS[n.id] + '<span>' + s.lv[n.id] + '</span>';
+      el.appendChild(m);
+    });
+    el.hidden = !el.children.length;
+  }
+  function neforSays(n) {
+    if (!n) {
+      const hired = NEFORS.filter(x => s.lv[x.id]);
+      if (!hired.length || s.stunLeft > 0) return;
+      n = pick(hired);
+    }
+    bubble.innerHTML = '<b>' + shortName(n) + ':</b> ' + pick(n.lines);
+    const crew = $('crew');
+    crew.classList.remove('bounce'); void crew.offsetWidth; crew.classList.add('bounce');
+  }
+
   // ---------- actions ----------
   function tap(clientX, clientY) {
     const sr = stage.getBoundingClientRect();
@@ -500,15 +658,20 @@ body {
       floatText(x, y, 'КХЕ!', 'засох, дай попить');
       return;
     }
-    const gain = perTap() * dryMul() * boostMul();
+    const crit = Math.random() < critCh();
+    const gain = perTap() * dryMul() * boostMul() * (crit ? 5 : 1);
     s.hrum += gain; s.total += gain; s.taps++;
+    if (crit) s.crits++;
     s.sush = Math.min(100, s.sush + sushTap());
-    chew(); crunch(); crumbs(3 + Math.floor(Math.random() * 3));
-    floatText(x, y, 'ХРУМ!', '+' + fmtRate(gain));
+    chew(); crunch(crit); crumbs(crit ? 10 : 3 + Math.floor(Math.random() * 3));
+    if (crit) floatText(x, y, 'ХРУМ ×5!', '+' + fmtRate(gain), 'crit');
+    else floatText(x, y, 'ХРУМ!', '+' + fmtRate(gain));
     if (s.sush >= 100) {
-      s.stunLeft = 4;
+      s.stunLeft = 4; s.stuns++;
       say(PHRASES.dead);
       $('hint').textContent = 'Вася засох. Дай попить или подожди 4 секунды.';
+    } else if (crit) {
+      say(PHRASES.crit);
     } else if (s.taps % 9 === 0 || band() !== lastBand) {
       say(PHRASES[band()]);
     }
@@ -518,21 +681,26 @@ body {
   function drink(d) {
     const c = drinkCost(d);
     if (s.hrum < c) return;
-    s.hrum -= c;
+    s.hrum -= c; s.drinks++;
     s.sush = Math.max(0, s.sush - d.amt);
     if (s.stunLeft > 0) { s.stunLeft = 0; resetHint(); }
     if (d.boost) s.boostLeft = d.boost;
     gulp(); say(PHRASES.drink);
-    const vr = vasya.getBoundingClientRect();
-    floatText(vr.left - stage.getBoundingClientRect().left + vr.width / 2, vr.top - stage.getBoundingClientRect().top + vr.height * 0.55, 'БУЛЬ!', d.name.toLowerCase());
+    const sr = stage.getBoundingClientRect(), vr = vasya.getBoundingClientRect();
+    floatText(vr.left - sr.left + vr.width / 2, vr.top - sr.top + vr.height * 0.55, 'БУЛЬ!', d.full.toLowerCase());
     render(true);
   }
 
-  function upgrade(u) {
-    const c = upCost(u);
-    if (s.hrum < c) return;
+  function levelUp(u, kind) {
+    const c = lvCost(u);
+    if (s.hrum < c || (u.max && s.lv[u.id] >= u.max)) return;
     s.hrum -= c; s.lv[u.id]++;
-    render(true);
+    if (kind === 'nefor') {
+      if (u.id === 'metal' || u.id === 'punk') riff(); else gulp();
+      renderCrew();
+      neforSays(u);
+    }
+    render(true); save();
   }
 
   function resetHint() { $('hint').textContent = 'Тапай по Васе. Хрумка сушит, не забывай запивать.'; }
@@ -549,10 +717,9 @@ body {
   });
   vasya.addEventListener('contextmenu', e => e.preventDefault());
 
-  $('soundBtn').addEventListener('click', () => {
-    s.sound = !s.sound;
-    render(true); save();
-  });
+  function toggleSound() { s.sound = !s.sound; render(true); save(); }
+  $('soundBtn').addEventListener('click', toggleSound);
+  $('soundBtn2').addEventListener('click', toggleSound);
 
   let resetArm = 0;
   $('resetBtn').addEventListener('click', () => {
@@ -568,16 +735,11 @@ body {
     const snd = s.sound;
     s = fresh(); s.sound = snd;
     bubble.textContent = 'Вась, хрумни разок!';
-    resetHint(); save(); render(true);
+    resetHint(); renderCrew(); save(); render(true);
   });
 
   // ---------- render ----------
-  const browL = $('browL'), browR = $('browR');
-  function sushColor(v) {
-    if (v < 35) return 'var(--water)';
-    if (v < 70) return 'var(--crust)';
-    return 'var(--red)';
-  }
+  const sushColor = v => (v < 35 ? 'var(--water)' : v < 70 ? 'var(--crust)' : 'var(--red)');
   function sushLabel(v) {
     if (s.stunLeft > 0) return 'засох';
     if (v < 20) return 'во рту свежо';
@@ -586,6 +748,17 @@ body {
     if (v < 70) return 'хрумка хуже лезет, ×0,7';
     if (v < 90) return 'сушняк, ×0,4';
     return 'сейчас засохнет!';
+  }
+  const maxed = u => u.max && s.lv[u.id] >= u.max;
+  const affordable = list => list.some(u => !maxed(u) && s.hrum >= lvCost(u));
+  function fillBtns(list) {
+    list.forEach(u => {
+      const c = lvCost(u), m = maxed(u);
+      u._btn.textContent = m ? 'макс' : fmt(c);
+      u._btn.disabled = m || s.hrum < c;
+      u._btn.setAttribute('aria-label', m ? u.name + ': максимальный уровень' : u.name + ' за ' + fmt(c) + ' хрумок');
+      u._lv.textContent = s.lv[u.id] ? 'ур. ' + s.lv[u.id] : '';
+    });
   }
   let shopTick = 0;
   function render(forceShop) {
@@ -606,8 +779,8 @@ body {
     $('lidL').setAttribute('height', lid.toFixed(1));
     $('lidR').setAttribute('height', lid.toFixed(1));
     const tilt = Math.max(0, (s.sush - 40) / 60) * 8;
-    browL.setAttribute('d', 'M56 ' + (104 - tilt) + ' L84 ' + (100 + tilt));
-    browR.setAttribute('d', 'M116 ' + (100 + tilt) + ' L144 ' + (104 - tilt));
+    $('browL').setAttribute('d', 'M56 ' + (104 - tilt) + ' L84 ' + (100 + tilt));
+    $('browR').setAttribute('d', 'M116 ' + (100 + tilt) + ' L144 ' + (104 - tilt));
     $('lips').setAttribute('fill', s.sush >= 60 ? '#8E3A2C' : '#B6303A');
 
     $('boostTag').hidden = !(s.boostLeft > 0);
@@ -626,23 +799,32 @@ body {
         const c = drinkCost(d);
         d._btn.textContent = fmt(c);
         d._btn.disabled = s.hrum < c || (s.sush < 1 && !d.boost);
-        d._btn.setAttribute('aria-label', d.name + ' за ' + fmt(c) + ' хрумок');
-        d._lv.textContent = '';
+        d._btn.setAttribute('aria-label', d.full + ' за ' + fmt(c) + ' хрумок');
       });
-      UPS.forEach(u => {
-        const c = upCost(u);
-        u._btn.textContent = fmt(c);
-        u._btn.disabled = s.hrum < c;
-        u._btn.setAttribute('aria-label', u.name + ' за ' + fmt(c) + ' хрумок');
-        u._lv.textContent = s.lv[u.id] ? 'ур. ' + s.lv[u.id] : '';
-      });
-      $('totals').textContent = 'Всего схрумкано: ' + fmt(s.total) + ' · тапов: ' + fmt(s.taps);
-      $('soundBtn').textContent = 'Звук: ' + (s.sound ? 'вкл' : 'выкл');
+      fillBtns(UPS);
+      fillBtns(NEFORS);
+      $('tab-ups').querySelector('.dot').hidden = !affordable(UPS);
+      $('tab-nefor').querySelector('.dot').hidden = !affordable(NEFORS);
+
+      const hired = NEFORS.filter(n => s.lv[n.id]).length;
+      const rows = [
+        ['Всего схрумкано', fmt(s.total)],
+        ['Тапов', fmt(s.taps)],
+        ['Крит-хрумов', fmt(s.crits)],
+        ['Выпито', fmt(s.drinks)],
+        ['Раз засыхал', fmt(s.stuns)],
+        ['Нефоров в тусовке', hired + ' из ' + NEFORS.length],
+        ['Шанс крит-хрума', Math.round(critCh() * 100) + '%'],
+        ['Сушняк за хрум', sushTap().toFixed(1).replace('.', ',') + '%']
+      ];
+      $('statList').innerHTML = rows.map(r => '<dt>' + r[0] + '</dt><dd>' + r[1] + '</dd>').join('');
+      const lab = 'Звук: ' + (s.sound ? 'вкл' : 'выкл');
+      $('soundBtn').textContent = lab; $('soundBtn2').textContent = lab;
     }
   }
 
   // ---------- loop ----------
-  let last = performance.now();
+  let last = performance.now(), chatter = 8;
   function frame(now) {
     const dt = Math.min(0.5, (now - last) / 1000);
     last = now;
@@ -655,6 +837,8 @@ body {
     } else if (s.sush > 0) {
       s.sush = Math.max(0, s.sush - sushDrop() * dt);
     }
+    chatter -= dt;
+    if (chatter <= 0) { chatter = 10 + Math.random() * 8; neforSays(); }
     render();
     requestAnimationFrame(frame);
   }
@@ -673,11 +857,14 @@ body {
   window.addEventListener('pagehide', save);
   document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 
-  window.claude?.hot?.snapshot?.(() => ({ state: s }));
+  window.claude?.hot?.snapshot?.(() => ({ state: s, tab: (tabs.find(t => t.getAttribute('aria-selected') === 'true') || tabs[0]).dataset.view }));
 
   function start(data) {
     load(data);
-    render(true);
+    renderCrew();
+    let tab = data && data.tab;
+    if (!tab) { try { tab = localStorage.getItem(TAB_KEY); } catch (e) { tab = null; } }
+    showTab(tabs.some(t => t.dataset.view === tab) ? tab : 'vasya');
     requestAnimationFrame(t => { last = t; frame(t); });
   }
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
