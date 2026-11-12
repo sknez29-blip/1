@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body style="margin:0">
+<title>Вась и хрумка</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Rubik:wght@400;500;700&display=swap">
+<style>
+/* Layout: snack-packet one-screen app — stats strip, thirst gauge, big tappable Vasya, shop below (side by side on wide screens). Single deliberate look. */
+:root {
+  --packet: #FFC52E;
+  --packet-deep: #F2A81D;
+  --ink: #1D1A3A;
+  --ink-soft: #4A4566;
+  --red: #E5383B;
+  --crust: #C9822B;
+  --paper: #FFF6DC;
+  --water: #2FA4D9;
+  --skin: #F6C9A0;
+  --skin-shade: #E7AE82;
+  --display: "Russo One", "Arial Black", Impact, sans-serif;
+  --body: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background-color: var(--packet);
+  background-image: radial-gradient(var(--packet-deep) 1.4px, transparent 1.6px);
+  background-size: 14px 14px;
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 15px;
+  -webkit-tap-highlight-color: transparent;
+}
+.app {
+  min-height: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding-block: 12px 20px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; }
+  .shop { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+}
+
+/* ---------- left column ---------- */
+.play { display: grid; gap: 12px; min-width: 0; }
+.brand {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.logo {
+  font-family: var(--display);
+  font-size: clamp(26px, 6vw, 36px);
+  line-height: 1;
+  margin: 0;
+  color: var(--red);
+  text-shadow: 3px 3px 0 var(--ink);
+  letter-spacing: 0.01em;
+  transform: rotate(-2deg);
+}
+.logo small { display: block; font-size: 0.42em; color: var(--ink); text-shadow: none; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4px; }
+.tools { display: flex; gap: 6px; }
+.chip {
+  font: 500 13px/1 var(--body);
+  background: var(--paper); color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 999px;
+  padding: 7px 11px; cursor: pointer;
+}
+.chip:focus-visible, .buy:focus-visible, .vasya:focus-visible { outline: 3px solid var(--water); outline-offset: 3px; }
+
+.stats {
+  display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 0;
+  background: var(--ink); color: var(--paper);
+  border-radius: 14px; overflow: hidden;
+}
+.stat { padding: 10px 12px; display: grid; gap: 2px; min-width: 0; }
+.stat + .stat { border-left: 1px solid rgba(255,246,220,0.18); }
+.stat .lab { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
+.stat .val { font-family: var(--display); font-size: 20px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat.main .val { font-size: 26px; color: var(--packet); }
+
+.gauge { display: grid; gap: 6px; }
+.gauge-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.gauge-head b { font-family: var(--display); font-weight: 400; font-size: 17px; letter-spacing: 0.02em; }
+.gauge-head span { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.bar {
+  height: 22px; border: 3px solid var(--ink); border-radius: 999px;
+  background: var(--paper); overflow: hidden; position: relative;
+}
+.bar i {
+  position: absolute; inset: 0 auto 0 0; width: 0%;
+  background: var(--water);
+  transition: width 0.12s linear, background-color 0.3s;
+}
+.bar::after {
+  content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(25% - 2px), rgba(29,26,58,0.25) calc(25% - 2px) 25%);
+  pointer-events: none;
+}
+.gauge.hot .bar { animation: shake 0.3s infinite; }
+
+.stage {
+  position: relative;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 22px;
+  box-shadow: 6px 6px 0 var(--ink);
+  padding: 16px 12px 14px;
+  display: grid; justify-items: center; gap: 6px;
+  overflow: hidden;
+  user-select: none; -webkit-user-select: none;
+}
+.bubble {
+  position: relative;
+  background: #fff; color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 14px;
+  padding: 7px 14px; font-weight: 500; font-size: 15px;
+  min-height: 36px; text-align: center; max-width: 100%;
+}
+.bubble::after {
+  content: ""; position: absolute; left: 50%; bottom: -9px; width: 14px; height: 14px;
+  background: #fff; border-right: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
+  transform: translateX(-50%) rotate(45deg);
+}
+.vasya {
+  appearance: none; border: 0; background: none; padding: 0; margin: 0;
+  width: min(300px, 78vw); max-width: 100%; aspect-ratio: 200 / 210;
+  cursor: pointer; touch-action: manipulation;
+  transition: transform 0.06s;
+}
+.vasya:active { transform: scale(0.96); }
+.vasya svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.hint { font-size: 13px; color: var(--ink-soft); text-align: center; }
+.boost-tag {
+  position: absolute; top: 12px; right: 12px;
+  background: var(--red); color: #fff; font: 400 13px/1 var(--display);
+  padding: 6px 9px; border-radius: 8px; transform: rotate(4deg);
+}
+
+/* Vasya states */
+#mouthOpen, #xeyes, #tongue, #sweat { display: none; }
+.chew #mouthOpen { display: inline; }
+.chew #mouthClosed { display: none; }
+.dry2 #sweat { display: inline; }
+.dry3 #tongue { display: inline; }
+.dry3 #mouthClosed { display: none; }
+.dry3 #mouthOpen { display: inline; }
+.dead #eyes { display: none; }
+.dead #xeyes { display: inline; }
+.dead #tongue { display: inline; }
+.dead .vasya { cursor: not-allowed; filter: saturate(0.6); }
+#cheeks { transition: opacity 0.3s; }
+#lips { transition: fill 0.3s; }
+
+.float {
+  position: absolute; pointer-events: none;
+  font-family: var(--display); color: var(--red);
+  text-shadow: 2px 2px 0 var(--ink);
+  font-size: 22px; white-space: nowrap;
+  animation: rise 0.8s ease-out forwards;
+}
+.float small { display: block; font-size: 0.6em; color: var(--ink); text-shadow: none; text-align: center; }
+.crumb {
+  position: absolute; width: 8px; height: 8px; border-radius: 2px;
+  background: var(--crust); border: 1px solid #8a5418;
+  pointer-events: none;
+  animation: crumb 0.7s cubic-bezier(.2,.6,.4,1) forwards;
+}
+@keyframes rise { from { transform: translate(-50%, 0) scale(0.8); opacity: 1; } to { transform: translate(-50%, -70px) scale(1.15); opacity: 0; } }
+@keyframes crumb { to { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+
+/* ---------- shop ---------- */
+.shop {
+  background: var(--paper);
+  border: 3px solid var(--ink); border-radius: 22px;
+  box-shadow: 6px 6px 0 var(--ink);
+  padding: 14px; display: grid; gap: 14px; min-width: 0;
+}
+.shop h2 {
+  margin: 0; font-family: var(--display); font-weight: 400; font-size: 19px;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+}
+.shop h2 span { font-family: var(--body); font-size: 12px; color: var(--ink-soft); letter-spacing: 0.06em; text-transform: uppercase; }
+.list { display: grid; gap: 8px; }
+.item {
+  display: grid; grid-template-columns: 40px minmax(0,1fr) auto; gap: 10px; align-items: center;
+  padding: 8px 8px 8px 6px; border-radius: 12px;
+  background: #fff; border: 2px solid rgba(29,26,58,0.12);
+}
+.ico { width: 40px; height: 40px; display: grid; place-items: center; }
+.ico svg { width: 36px; height: 36px; }
+.info { min-width: 0; display: grid; gap: 2px; }
+.info b { font-weight: 700; font-size: 14.5px; }
+.info b em { font-style: normal; font-weight: 500; color: var(--ink-soft); font-size: 12px; margin-left: 4px; }
+.info span { font-size: 12.5px; color: var(--ink-soft); line-height: 1.3; }
+.buy {
+  font: 400 14px/1 var(--display);
+  background: var(--red); color: #fff;
+  border: 2px solid var(--ink); border-radius: 10px;
+  padding: 9px 10px; min-width: 76px; cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.buy.drink { background: var(--water); }
+.buy:active:not(:disabled) { transform: translate(2px,2px); box-shadow: none; }
+.buy:disabled { background: #d9d2bf; color: #7d7768; box-shadow: none; cursor: not-allowed; border-color: #a9a291; }
+.foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-soft); }
+.foot .chip { font-size: 12px; padding: 6px 10px; }
+.foot .chip.warn { background: var(--red); color: #fff; }
+
+@media (max-width: 420px) {
+  .stat .val { font-size: 17px; }
+  .stat.main .val { font-size: 21px; }
+  .stat { padding: 9px 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .float, .crumb { animation-duration: 0.01s; }
+  .gauge.hot .bar { animation: none; }
+  .vasya { transition: none; }
+}
+</style>
+
+<div class="app">
+  <section class="play">
+    <div class="brand">
+      <h1 class="logo">Вась, хрумни!<small>тапалка про хрумку и сушняк</small></h1>
+      <div class="tools">
+        <button class="chip" id="soundBtn" type="button">Звук: вкл</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat main"><span class="lab">Хрумки</span><span class="val" id="hrum">0</span></div>
+      <div class="stat"><span class="lab">За тап</span><span class="val" id="perTap">1</span></div>
+      <div class="stat"><span class="lab">В секунду</span><span class="val" id="perSec">0</span></div>
+    </div>
+
+    <div class="gauge" id="gauge">
+      <div class="gauge-head"><b>Сушняк</b><span id="sushTxt">0% · во рту свежо</span></div>
+      <div class="bar"><i id="sushBar"></i></div>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="bubble" id="bubble">Вась, хрумни разок!</div>
+      <button class="vasya" id="vasya" type="button" aria-label="Тапнуть Васю: он хрумкает">
+        <svg viewBox="0 0 200 210" aria-hidden="true">
+          <!-- ears -->
+          <ellipse cx="26" cy="118" rx="14" ry="20" fill="var(--skin-shade)" stroke="var(--ink)" stroke-width="4"/>
+          <ellipse cx="174" cy="118" rx="14" ry="20" fill="var(--skin-shade)" stroke="var(--ink)" stroke-width="4"/>
+          <!-- head -->
+          <path d="M100 30 C150 30 176 66 176 118 C176 168 144 200 100 200 C56 200 24 168 24 118 C24 66 50 30 100 30 Z" fill="var(--skin)" stroke="var(--ink)" stroke-width="4"/>
+          <!-- cap -->
+          <path d="M30 86 C30 40 64 18 100 18 C140 18 170 40 170 86 Z" fill="var(--ink)"/>
+          <path d="M100 86 L196 86 C196 98 180 102 160 100 L100 98 Z" fill="var(--ink)"/>
+          <rect x="30" y="80" width="140" height="10" rx="3" fill="var(--red)"/>
+          <circle cx="100" cy="22" r="6" fill="var(--red)"/>
+          <text x="100" y="66" text-anchor="middle" font-family="Russo One, Arial Black, sans-serif" font-size="22" fill="var(--packet)">ВАСЯ</text>
+          <!-- brows -->
+          <g id="brows" stroke="var(--ink)" stroke-width="5" stroke-linecap="round">
+            <path id="browL" d="M56 104 L84 100"/>
+            <path id="browR" d="M116 100 L144 104"/>
+          </g>
+          <!-- eyes -->
+          <g id="eyes">
+            <ellipse cx="70" cy="122" rx="11" ry="13" fill="#fff" stroke="var(--ink)" stroke-width="3"/>
+            <ellipse cx="130" cy="122" rx="11" ry="13" fill="#fff" stroke="var(--ink)" stroke-width="3"/>
+            <circle id="pupilL" cx="72" cy="124" r="5.5" fill="var(--ink)"/>
+            <circle id="pupilR" cx="128" cy="124" r="5.5" fill="var(--ink)"/>
+            <rect id="lidL" x="57" y="108" width="26" height="0" fill="var(--skin-shade)"/>
+            <rect id="lidR" x="117" y="108" width="26" height="0" fill="var(--skin-shade)"/>
+          </g>
+          <g id="xeyes" stroke="var(--ink)" stroke-width="5" stroke-linecap="round">
+            <path d="M60 112 L80 132 M80 112 L60 132"/>
+            <path d="M120 112 L140 132 M140 112 L120 132"/>
+          </g>
+          <!-- nose & cheeks -->
+          <path d="M100 128 C94 142 92 148 102 150" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>
+          <g id="cheeks" opacity="0.25">
+            <ellipse cx="54" cy="150" rx="14" ry="9" fill="var(--red)"/>
+            <ellipse cx="146" cy="150" rx="14" ry="9" fill="var(--red)"/>
+          </g>
+          <!-- mouth -->
+          <g id="mouthClosed">
+            <path d="M74 168 C88 180 112 180 126 168" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+          </g>
+          <g id="mouthOpen">
+            <ellipse id="lips" cx="100" cy="172" rx="24" ry="17" fill="#B6303A" stroke="var(--ink)" stroke-width="4"/>
+            <rect x="86" y="157" width="28" height="7" rx="2" fill="#fff"/>
+          </g>
+          <path id="tongue" d="M90 178 C90 196 110 196 110 178 Z" fill="#E86F7A" stroke="var(--ink)" stroke-width="3"/>
+          <!-- sweat -->
+          <path id="sweat" d="M160 96 C154 108 152 114 160 116 C168 114 166 108 160 96 Z" fill="var(--water)" stroke="var(--ink)" stroke-width="2.5"/>
+        </svg>
+      </button>
+      <div class="hint" id="hint">Тапай по Васе. Хрумка сушит, не забывай запивать.</div>
+      <div class="boost-tag" id="boostTag" hidden>×2 РАССОЛ</div>
+    </div>
+  </section>
+
+  <aside class="shop" aria-label="Магазин">
+    <h2>Попить <span>сбивает сушняк</span></h2>
+    <div class="list" id="drinks"></div>
+    <h2>Прокачка <span>больше хрумки</span></h2>
+    <div class="list" id="ups"></div>
+    <div class="foot">
+      <span id="totals">Всего схрумкано: 0 · тапов: 0</span>
+      <button class="chip" id="resetBtn" type="button">Начать заново</button>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  const SAVE_KEY = 'vasya-hrumka-v1';
+
+  const ICONS = {
+    water: '<svg viewBox="0 0 40 40"><path d="M10 6h20l-3 30H13z" fill="#CFEFFF" stroke="#1D1A3A" stroke-width="2.5" stroke-linejoin="round"/><path d="M11.6 16h16.8l-2 18H13.6z" fill="#2FA4D9"/></svg>',
+    kvas: '<svg viewBox="0 0 40 40"><path d="M8 10h20v24H8z" fill="#8B4A1C" stroke="#1D1A3A" stroke-width="2.5"/><path d="M8 10c0-5 20-5 20 0" fill="#FFF6DC" stroke="#1D1A3A" stroke-width="2.5"/><path d="M28 15h4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-4" fill="none" stroke="#1D1A3A" stroke-width="2.5"/></svg>',
+    rassol: '<svg viewBox="0 0 40 40"><rect x="9" y="10" width="22" height="26" rx="5" fill="#D8F0B8" stroke="#1D1A3A" stroke-width="2.5"/><rect x="12" y="4" width="16" height="7" rx="2" fill="#E5383B" stroke="#1D1A3A" stroke-width="2.5"/><ellipse cx="17" cy="23" rx="4" ry="8" fill="#4F8A2B" stroke="#1D1A3A" stroke-width="1.5"/><ellipse cx="24" cy="25" rx="3.5" ry="7" fill="#5E9C33" stroke="#1D1A3A" stroke-width="1.5"/></svg>',
+    pack: '<svg viewBox="0 0 40 40"><path d="M9 6h22l-2 4 2 4v18l-2 4H11l-2-4V14l2-4z" fill="#FFC52E" stroke="#1D1A3A" stroke-width="2.5" stroke-linejoin="round"/><text x="20" y="27" text-anchor="middle" font-family="Russo One,sans-serif" font-size="9" fill="#E5383B">ХРУМ</text></svg>',
+    garlic: '<svg viewBox="0 0 40 40"><rect x="7" y="12" width="12" height="12" rx="2" fill="#C9822B" stroke="#1D1A3A" stroke-width="2.5" transform="rotate(-12 13 18)"/><rect x="19" y="18" width="13" height="13" rx="2" fill="#D9963C" stroke="#1D1A3A" stroke-width="2.5" transform="rotate(10 25 24)"/><path d="M27 4c-4 3-5 7-2 10 3-3 3-7 2-10z" fill="#fff" stroke="#1D1A3A" stroke-width="2"/></svg>',
+    babushka: '<svg viewBox="0 0 40 40"><circle cx="20" cy="18" r="10" fill="#F6C9A0" stroke="#1D1A3A" stroke-width="2.5"/><path d="M8 18c0-10 24-10 24 0l-2 4c-2-6-18-6-20 0z" fill="#E5383B" stroke="#1D1A3A" stroke-width="2.5"/><path d="M17 32h6l2 6H15z" fill="#E5383B"/><circle cx="16.5" cy="19" r="1.6" fill="#1D1A3A"/><circle cx="23.5" cy="19" r="1.6" fill="#1D1A3A"/><path d="M16 24c2 2 6 2 8 0" fill="none" stroke="#1D1A3A" stroke-width="2" stroke-linecap="round"/></svg>',
+    petya: '<svg viewBox="0 0 40 40"><circle cx="20" cy="21" r="12" fill="#F6C9A0" stroke="#1D1A3A" stroke-width="2.5"/><path d="M8 18c2-10 22-12 24 0-6-4-18-4-24 0z" fill="#6B3E1F" stroke="#1D1A3A" stroke-width="2.5"/><rect x="11" y="18" width="8" height="5" rx="1.5" fill="#1D1A3A"/><rect x="21" y="18" width="8" height="5" rx="1.5" fill="#1D1A3A"/><path d="M19 20.5h2" stroke="#1D1A3A" stroke-width="2"/><path d="M15 27c3 3 7 3 10 0" fill="none" stroke="#1D1A3A" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    cooler: '<svg viewBox="0 0 40 40"><path d="M14 4h12v10H14z" fill="#9AD8F5" stroke="#1D1A3A" stroke-width="2.5"/><rect x="10" y="14" width="20" height="23" rx="3" fill="#FFF6DC" stroke="#1D1A3A" stroke-width="2.5"/><rect x="15" y="20" width="4" height="4" fill="#2FA4D9"/><rect x="21" y="20" width="4" height="4" fill="#E5383B"/></svg>'
+  };
+
+  const DRINKS = [
+    { id: 'water',  name: 'Стакан воды',      desc: 'Минус 30% сушняка',                         base: 10,  scale: 3,  amt: 30 },
+    { id: 'kvas',   name: 'Кружка кваса',     desc: 'Минус 65% сушняка',                         base: 45,  scale: 8,  amt: 65 },
+    { id: 'rassol', name: 'Огуречный рассол', desc: 'Сушняк в ноль и ×2 хрумки на 15 секунд',   base: 220, scale: 25, amt: 100, boost: 15 }
+  ];
+  const UPS = [
+    { id: 'pack',     name: 'Пачка побольше',      desc: '+1 хрумка за тап',                 base: 15,  k: 1.45 },
+    { id: 'babushka', name: 'Бабушка с пакетом',   desc: '+1 хрумка в секунду, сама носит',  base: 50,  k: 1.5 },
+    { id: 'garlic',   name: 'Сухарики с чесноком', desc: '+5 за тап, но сушат сильнее',      base: 160, k: 1.6 },
+    { id: 'cooler',   name: 'Кулер на кухне',      desc: 'Сушняк проходит быстрее',          base: 250, k: 1.9 },
+    { id: 'petya',    name: 'Кореш Петя',          desc: '+8 хрумок в секунду, делится',     base: 650, k: 1.6 }
+  ];
+
+  const PHRASES = {
+    fresh: ['Хрум-хрум!', 'Ещё пачечку!', 'Хрустит как надо', 'Вкуснотища', 'Хрум. Хрум. Хрум.', 'С сыром были бы лучше'],
+    mid:   ['Чё-то пить охота…', 'Солоноватые…', 'Кхм. Нормально.', 'Язык как наждачка'],
+    dry:   ['Воды бы…', 'Во рту Сахара', 'Сушня-а-ак…', 'Дайте кваса, люди!'],
+    dead:  ['Всё. Засох.', 'Кхе… кхе…', 'Не могу хрумать…'],
+    drink: ['Ух, хорошо пошло!', 'Ожил!', 'Вот это жизнь', 'Можно снова хрумать']
+  };
+
+  const fresh = () => ({ hrum: 0, total: 0, taps: 0, sush: 0, lv: { pack: 0, babushka: 0, garlic: 0, cooler: 0, petya: 0 }, boostLeft: 0, stunLeft: 0, sound: true });
+  let s = fresh();
+
+  // ---------- derived numbers ----------
+  const perTap   = () => 1 + s.lv.pack + s.lv.garlic * 5;
+  const perSec   = () => s.lv.babushka * 1 + s.lv.petya * 8;
+  const sushTap  = () => 2.2 + Math.min(s.lv.garlic, 12) * 0.45;
+  const sushDrop = () => 1.3 + s.lv.cooler * 0.9;
+  const boostMul = () => (s.boostLeft > 0 ? 2 : 1);
+  const dryMul   = () => (s.sush < 50 ? 1 : s.sush < 80 ? 0.7 : 0.4);
+  const upCost   = u => Math.round(u.base * Math.pow(u.k, s.lv[u.id]));
+  const drinkCost = d => Math.round(d.base + (perTap() - 1) * d.scale + perSec() * d.scale * 0.5);
+
+  function fmtRate(n) {
+    return n < 10 && n % 1 ? n.toFixed(1).replace('.', ',') : fmt(n);
+  }
+  function fmt(n) {
+    n = Math.floor(n);
+    if (n < 10000) return n.toLocaleString('ru-RU');
+    const units = [[1e12, ' трлн'], [1e9, ' млрд'], [1e6, ' млн'], [1e3, ' тыс']];
+    for (const [v, u] of units) if (n >= v) return (n / v).toFixed(n / v < 100 ? 1 : 0).replace('.', ',') + u;
+    return String(n);
+  }
+
+  // ---------- DOM ----------
+  const $ = id => document.getElementById(id);
+  const stage = $('stage'), vasya = $('vasya'), bubble = $('bubble');
+  const svg = vasya.querySelector('svg');
+
+  function buildList(el, items, kind) {
+    el.innerHTML = '';
+    items.forEach(it => {
+      const row = document.createElement('div');
+      row.className = 'item';
+      row.innerHTML =
+        '<div class="ico">' + ICONS[it.id] + '</div>' +
+        '<div class="info"><b>' + it.name + '<em data-lv></em></b><span>' + it.desc + '</span></div>' +
+        '<button class="buy' + (kind === 'drink' ? ' drink' : '') + '" type="button" id="buy-' + it.id + '"></button>';
+      const btn = row.querySelector('button');
+      btn.addEventListener('click', () => (kind === 'drink' ? drink(it) : upgrade(it)));
+      it._btn = btn; it._lv = row.querySelector('[data-lv]');
+      el.appendChild(row);
+    });
+  }
+  buildList($('drinks'), DRINKS, 'drink');
+  buildList($('ups'), UPS, 'up');
+
+  // ---------- sound ----------
+  let ac = null, noiseBuf = null;
+  function audio() {
+    if (!s.sound) return null;
+    try {
+      if (!ac) {
+        ac = new (window.AudioContext || window.webkitAudioContext)();
+        noiseBuf = ac.createBuffer(1, ac.sampleRate * 0.25, ac.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+      if (ac.state === 'suspended') ac.resume();
+      return ac;
+    } catch (e) { return null; }
+  }
+  function crunch() {
+    const a = audio(); if (!a) return;
+    const t = a.currentTime;
+    for (let k = 0; k < 3; k++) {
+      const src = a.createBufferSource(); src.buffer = noiseBuf;
+      const f = a.createBiquadFilter(); f.type = 'bandpass';
+      f.frequency.value = 1400 + Math.random() * 2600; f.Q.value = 1.2;
+      const g = a.createGain();
+      const st = t + k * (0.025 + Math.random() * 0.02);
+      g.gain.setValueAtTime(0.0001, st);
+      g.gain.exponentialRampToValueAtTime(0.35, st + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, st + 0.05 + Math.random() * 0.03);
+      src.connect(f); f.connect(g); g.connect(a.destination);
+      src.start(st, Math.random() * 0.15); src.stop(st + 0.1);
+    }
+  }
+  function gulp() {
+    const a = audio(); if (!a) return;
+    const t = a.currentTime;
+    for (let k = 0; k < 3; k++) {
+      const o = a.createOscillator(), g = a.createGain();
+      const st = t + k * 0.13;
+      o.type = 'sine';
+      o.frequency.setValueAtTime(320, st); o.frequency.exponentialRampToValueAtTime(130, st + 0.1);
+      g.gain.setValueAtTime(0.0001, st); g.gain.exponentialRampToValueAtTime(0.25, st + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, st + 0.11);
+      o.connect(g); g.connect(a.destination); o.start(st); o.stop(st + 0.12);
+    }
+  }
+  function cough() {
+    const a = audio(); if (!a) return;
+    const t = a.currentTime;
+    const src = a.createBufferSource(); src.buffer = noiseBuf;
+    const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 700;
+    const g = a.createGain();
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.4, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    src.connect(f); f.connect(g); g.connect(a.destination); src.start(t); src.stop(t + 0.2);
+  }
+
+  // ---------- effects ----------
+  function say(list) { bubble.textContent = list[Math.floor(Math.random() * list.length)]; }
+  function band() { return s.stunLeft > 0 ? 'dead' : s.sush >= 70 ? 'dry' : s.sush >= 35 ? 'mid' : 'fresh'; }
+  let lastBand = 'fresh';
+
+  function floatText(x, y, big, small) {
+    const el = document.createElement('div');
+    el.className = 'float';
+    el.style.left = x + 'px'; el.style.top = y + 'px';
+    el.innerHTML = big + (small ? '<small>' + small + '</small>' : '');
+    stage.appendChild(el);
+    setTimeout(() => el.remove(), 850);
+  }
+  function crumbs(n) {
+    const sr = stage.getBoundingClientRect(), vr = vasya.getBoundingClientRect();
+    const mx = vr.left - sr.left + vr.width * 0.5, my = vr.top - sr.top + vr.height * 0.82;
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('div');
+      c.className = 'crumb';
+      c.style.left = mx + 'px'; c.style.top = my + 'px';
+      c.style.setProperty('--dx', (Math.random() * 140 - 70) + 'px');
+      c.style.setProperty('--dy', (20 + Math.random() * 70) + 'px');
+      c.style.setProperty('--r', (Math.random() * 360) + 'deg');
+      stage.appendChild(c);
+      setTimeout(() => c.remove(), 750);
+    }
+  }
+  let chewT = 0;
+  function chew() {
+    stage.classList.add('chew');
+    clearTimeout(chewT);
+    chewT = setTimeout(() => stage.classList.remove('chew'), 110);
+  }
+
+  // ---------- actions ----------
+  function tap(clientX, clientY) {
+    const sr = stage.getBoundingClientRect();
+    const x = clientX - sr.left, y = clientY - sr.top - 10;
+    if (s.stunLeft > 0) {
+      cough();
+      floatText(x, y, 'КХЕ!', 'засох, дай попить');
+      return;
+    }
+    const gain = perTap() * dryMul() * boostMul();
+    s.hrum += gain; s.total += gain; s.taps++;
+    s.sush = Math.min(100, s.sush + sushTap());
+    chew(); crunch(); crumbs(3 + Math.floor(Math.random() * 3));
+    floatText(x, y, 'ХРУМ!', '+' + fmtRate(gain));
+    if (s.sush >= 100) {
+      s.stunLeft = 4;
+      say(PHRASES.dead);
+      $('hint').textContent = 'Вася засох. Дай попить или подожди 4 секунды.';
+    } else if (s.taps % 9 === 0 || band() !== lastBand) {
+      say(PHRASES[band()]);
+    }
+    render();
+  }
+
+  function drink(d) {
+    const c = drinkCost(d);
+    if (s.hrum < c) return;
+    s.hrum -= c;
+    s.sush = Math.max(0, s.sush - d.amt);
+    if (s.stunLeft > 0) { s.stunLeft = 0; resetHint(); }
+    if (d.boost) s.boostLeft = d.boost;
+    gulp(); say(PHRASES.drink);
+    const vr = vasya.getBoundingClientRect();
+    floatText(vr.left - stage.getBoundingClientRect().left + vr.width / 2, vr.top - stage.getBoundingClientRect().top + vr.height * 0.55, 'БУЛЬ!', d.name.toLowerCase());
+    render(true);
+  }
+
+  function upgrade(u) {
+    const c = upCost(u);
+    if (s.hrum < c) return;
+    s.hrum -= c; s.lv[u.id]++;
+    render(true);
+  }
+
+  function resetHint() { $('hint').textContent = 'Тапай по Васе. Хрумка сушит, не забывай запивать.'; }
+
+  vasya.addEventListener('pointerdown', e => {
+    if (e.button !== undefined && e.button !== 0) return;
+    e.preventDefault();
+    tap(e.clientX, e.clientY);
+  });
+  vasya.addEventListener('click', e => {
+    if (e.detail !== 0) return; // keyboard activation only
+    const r = vasya.getBoundingClientRect();
+    tap(r.left + r.width / 2, r.top + r.height * 0.4);
+  });
+  vasya.addEventListener('contextmenu', e => e.preventDefault());
+
+  $('soundBtn').addEventListener('click', () => {
+    s.sound = !s.sound;
+    render(true); save();
+  });
+
+  let resetArm = 0;
+  $('resetBtn').addEventListener('click', () => {
+    const b = $('resetBtn');
+    if (!resetArm) {
+      b.textContent = 'Точно? Нажми ещё раз';
+      b.classList.add('warn');
+      resetArm = setTimeout(() => { resetArm = 0; b.textContent = 'Начать заново'; b.classList.remove('warn'); }, 3000);
+      return;
+    }
+    clearTimeout(resetArm); resetArm = 0;
+    b.textContent = 'Начать заново'; b.classList.remove('warn');
+    const snd = s.sound;
+    s = fresh(); s.sound = snd;
+    bubble.textContent = 'Вась, хрумни разок!';
+    resetHint(); save(); render(true);
+  });
+
+  // ---------- render ----------
+  const browL = $('browL'), browR = $('browR');
+  function sushColor(v) {
+    if (v < 35) return 'var(--water)';
+    if (v < 70) return 'var(--crust)';
+    return 'var(--red)';
+  }
+  function sushLabel(v) {
+    if (s.stunLeft > 0) return 'засох';
+    if (v < 20) return 'во рту свежо';
+    if (v < 35) return 'хрустим дальше';
+    if (v < 50) return 'хочется попить';
+    if (v < 70) return 'хрумка хуже лезет, ×0,7';
+    if (v < 90) return 'сушняк, ×0,4';
+    return 'сейчас засохнет!';
+  }
+  let shopTick = 0;
+  function render(forceShop) {
+    $('hrum').textContent = fmt(s.hrum);
+    $('perTap').textContent = fmtRate(perTap() * dryMul() * boostMul()) + (dryMul() < 1 ? '↓' : '');
+    $('perSec').textContent = fmt(perSec() * boostMul());
+    const v = Math.round(s.sush);
+    $('sushBar').style.width = v + '%';
+    $('sushBar').style.backgroundColor = sushColor(v);
+    $('sushTxt').textContent = v + '% · ' + sushLabel(v);
+    $('gauge').classList.toggle('hot', s.sush >= 85 || s.stunLeft > 0);
+
+    stage.classList.toggle('dry2', s.sush >= 50);
+    stage.classList.toggle('dry3', s.sush >= 80 && s.stunLeft <= 0);
+    stage.classList.toggle('dead', s.stunLeft > 0);
+    $('cheeks').setAttribute('opacity', (0.2 + s.sush / 100 * 0.75).toFixed(2));
+    const lid = Math.max(0, (s.sush - 40) / 60) * 12;
+    $('lidL').setAttribute('height', lid.toFixed(1));
+    $('lidR').setAttribute('height', lid.toFixed(1));
+    const tilt = Math.max(0, (s.sush - 40) / 60) * 8;
+    browL.setAttribute('d', 'M56 ' + (104 - tilt) + ' L84 ' + (100 + tilt));
+    browR.setAttribute('d', 'M116 ' + (100 + tilt) + ' L144 ' + (104 - tilt));
+    $('lips').setAttribute('fill', s.sush >= 60 ? '#8E3A2C' : '#B6303A');
+
+    $('boostTag').hidden = !(s.boostLeft > 0);
+    if (s.boostLeft > 0) $('boostTag').textContent = '×2 РАССОЛ · ' + Math.ceil(s.boostLeft) + ' с';
+
+    const b = band();
+    if (b !== lastBand) {
+      if (b === 'fresh' && lastBand === 'dead') { say(PHRASES.fresh); resetHint(); }
+      lastBand = b;
+    }
+
+    const now = performance.now();
+    if (forceShop || now - shopTick > 150) {
+      shopTick = now;
+      DRINKS.forEach(d => {
+        const c = drinkCost(d);
+        d._btn.textContent = fmt(c);
+        d._btn.disabled = s.hrum < c || (s.sush < 1 && !d.boost);
+        d._btn.setAttribute('aria-label', d.name + ' за ' + fmt(c) + ' хрумок');
+        d._lv.textContent = '';
+      });
+      UPS.forEach(u => {
+        const c = upCost(u);
+        u._btn.textContent = fmt(c);
+        u._btn.disabled = s.hrum < c;
+        u._btn.setAttribute('aria-label', u.name + ' за ' + fmt(c) + ' хрумок');
+        u._lv.textContent = s.lv[u.id] ? 'ур. ' + s.lv[u.id] : '';
+      });
+      $('totals').textContent = 'Всего схрумкано: ' + fmt(s.total) + ' · тапов: ' + fmt(s.taps);
+      $('soundBtn').textContent = 'Звук: ' + (s.sound ? 'вкл' : 'выкл');
+    }
+  }
+
+  // ---------- loop ----------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.5, (now - last) / 1000);
+    last = now;
+    const ps = perSec() * boostMul();
+    if (ps) { s.hrum += ps * dt; s.total += ps * dt; }
+    if (s.boostLeft > 0) s.boostLeft = Math.max(0, s.boostLeft - dt);
+    if (s.stunLeft > 0) {
+      s.stunLeft -= dt;
+      if (s.stunLeft <= 0) { s.stunLeft = 0; s.sush = 75; say(PHRASES.dry); resetHint(); }
+    } else if (s.sush > 0) {
+      s.sush = Math.max(0, s.sush - sushDrop() * dt);
+    }
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- persistence ----------
+  function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); } catch (e) {} }
+  function load(data) {
+    let src = data && data.state;
+    if (!src) { try { src = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) { src = null; } }
+    if (src && typeof src === 'object') {
+      const base = fresh();
+      s = Object.assign(base, src, { lv: Object.assign(base.lv, src.lv || {}) });
+    }
+  }
+  setInterval(save, 2000);
+  window.addEventListener('pagehide', save);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+
+  window.claude?.hot?.snapshot?.(() => ({ state: s }));
+
+  function start(data) {
+    load(data);
+    render(true);
+    requestAnimationFrame(t => { last = t; frame(t); });
+  }
+  window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+
+</body>
+</html>
